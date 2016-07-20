@@ -3,12 +3,15 @@ import StringIO
 import gzip
 import pandas as pd
 import re
+import getpass
 
-base_filesystem = '/Users/martin/Documents/dev/mabit/histo/'
+local_histo_archive = '/Users/' + getpass.getuser() + '/Documents/dev/mabit/histo/'
+print 'Using ' + local_histo_archive + ' as local archive path'
+
 base_url = 'http://api.bitcoincharts.com/v1/csv/'
 filename = "bitfinexUSD.csv "
 
-def downloadAndDecompress(url, uncompress=False,local_path = '/Users/apple/Documents/dev/mabit/histo/'):
+def downloadAndDecompress(url, uncompress=False,local_path = local_histo_archive):
     print("Dowloading " + url)
     response = urllib2.urlopen(url)
     if uncompress:
