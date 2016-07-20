@@ -8,7 +8,7 @@ base_filesystem = '/Users/martin/Documents/dev/mabit/histo/'
 base_url = 'http://api.bitcoincharts.com/v1/csv/'
 filename = "bitfinexUSD.csv "
 
-def downloadAndDecompress(url, uncompress=False,local_path = '/Users/martin/Documents/dev/mabit/histo/'):
+def downloadAndDecompress(url, uncompress=False,local_path = '/Users/apple/Documents/dev/mabit/histo/'):
     print("Dowloading " + url)
     response = urllib2.urlopen(url)
     if uncompress:
@@ -29,3 +29,9 @@ def getListofFile(url):
     response = urllib2.urlopen(url).read()
     pattern = '<a href="(.*?csv\.gz)"'
     return re.findall(pattern, response)
+
+
+def get_df_histo(name,local_path = '/Users/apple/Documents/dev/mabit/histo/'):
+    filename = local_path + name + ".csv.gz"
+    df = pd.read_csv(filename,compression='gzip',header=None,names=['date','price','qty'])
+    return df
