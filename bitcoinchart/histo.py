@@ -34,7 +34,7 @@ def getListofFile(url):
     return re.findall(pattern, response)
 
 
-def get_df_histo(name,local_path = '/Users/apple/Documents/dev/mabit/histo/'):
+def get_df_histo(name,local_path = local_histo_archive):
     filename = local_path + name + ".csv.gz"
     df = pd.read_csv(filename,compression='gzip',header=None,names=['date','price','qty'])
     return df
