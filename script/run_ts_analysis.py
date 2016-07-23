@@ -15,7 +15,7 @@ wspace = 0.3   # 0.2the amount of width reserved for blank space between subplot
 hspace = 0.6   # 0.5the amount of height reserved for white space between subplots
 
 
-def get_volume_curves(min):
+def get_intraday_curves(min):
     volume = min.pivot_table(index='minute', columns='day', values='qty')
     volume = volume.fillna(0)
     volume_pct = volume / volume.sum()
@@ -23,10 +23,18 @@ def get_volume_curves(min):
     volume_curve = volume_curve / volume_curve.sum()
     return volume_curve
 
+def get_daily_curves(min):
+
+    volume = min.pivot_table(index='minute', columns='day', values='qty')
+    volume = volume.fillna(0)
+    volume_pct = volume / volume.sum()
+    volume_curve = volume_pct.median(axis=1)
+    volume_curve = volume_curve / volume_curve.sum()
+    return volume_curve
 
 markets = ['bitfinexUSD']
 
-for market in markets:
+#for market in markets:
     df = histo.get_df_histo('bitfinexUSD')
     #   df should look like:
     #          date   price        qty
@@ -41,37 +49,48 @@ for market in markets:
     del df['date']
 
     # minutly bucketing, adding minute, day and weekday columns
-    min = df.resample('1min', how ={'price': np.mean, 'qty': np.sum})
-    min['minute'] = min.index.hour * 60 + min.index.minute
-    min['weekday'] = min.index.weekday
-    min['day'] = pd.to_datetime(min.index.year * 10000 + min.index.month * 100 + min.index.day,format="%Y%m%d")
+    minutely_df = df.resample('1min', how ={'price': np.mean, 'qty': np.sum})
+    minutely_df['minute'] = minutely_df.index.hour * 60 + minutely_df.index.minute
+    minutely_df['weekday'] = minutely_df.index.weekday
+    minutely_df['day'] = pd.to_datetime(minutely_df.index.year * 10000 + minutely_df.index.month * 100 + minutely_df.index.day, format="%Y%m%d")
+#   minutely_df now looks like that:
+#                        price        qty  minute  weekday        day
+#   date
+#   2015-01-01 00:00:00  322.253333  62.098597       0        3 2015-01-01
+#   2015-01-01 00:01:00  321.800000   5.929470       1        3 2015-01-01
 
-    daily_volume = min.groupby('day')['qty'].sum()
-    log_daily_volume = np.log(daily_volume)
 
-   # weekday_vol = min.pivot_table(index='minute', columns='weekday', values='qty',aggfunc=np.sum)
-   # weekday_vol = weekday_vol.fillna(0)
-    #week day vol should look like:
-    #   weekday
-    #   minute      0           1           2           ...
-    #   0           1473.24     1641.79     6362.96     ...
-    #   1           1898.03     1268.54     5457.49     ...
+    daily_volume = minutely_df[['day','qty']].groupby('day').sum()
+    daily_volume['weekday'] = daily_volume.index.weekday
+    weekday_volume = daily_volume.groupby('weekday').mean()
+    weekday_adj  = (weekday_volume / weekday_volume.loc[0,'qty']).to_dict().get('qty')
+ #   weekday_volume['weeekday_adj']=[ weekday_adj.get(x) for x in daily_volume.weekday ]
+    daily_volume['weeekday_adj']=[ weekday_adj.get(x) for x in daily_volume.weekday]
+    daily_volume['qty_adj'] = daily_volume.qty / daily_volume.weeekday_adj
+    daily_volume['adv_log_adj'] = daily_volume.log_adj.ewm(halflife=5).mean().shift(1)
+ #                   qty  weekday  weeekday_adj       qty_adj
+#day
+#2015-01-01   5177.991896        3      1.050329   5438.596399
+#2015-01-02   3834.544008        4      1.039678   3986.692428
+#2015-01-03  47380.812581        5      0.851738  40356.037254
 
+
+   log_daily_volume = np.log(daily_volume)
 
     plt.close()
     plt.subplots_adjust(left=left, bottom=bottom, right=right, top=top, wspace=wspace, hspace=hspace)
 
-    weekday_curves = pd.DataFrame({ "all" : get_volume_curves(min)})
+    weekday_intraday_curves = pd.DataFrame({"all" : get_intraday_curves(minutely_df)})
 
     ax = plt.subplot(421)
     ax.set_title('all')
-    ax.plot(weekday_curves)
+    ax.plot(weekday_intraday_curves)
 
     for day in range(7):
-        weekday_curves[str(day)] = get_volume_curves(min.loc[min['weekday'] == day])
+        weekday_intraday_curves[str(day)] = get_intraday_curves(minutely_df.loc[minutely_df['weekday'] == day])
         ax = plt.subplot(422+day)
         ax.set_title(str(day))
-        ax.plot(weekday_curves[str(day)])
+        ax.plot(weekday_intraday_curves[str(day)])
 
     #plt.savefig(histo.local_histo_archive + market + ".weedday_curves_figure.pdf")
     #weekday_curves.to_csv(histo.local_histo_archive + market + ".weekday_curve.csv")
