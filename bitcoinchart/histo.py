@@ -35,6 +35,6 @@ def getListofFile(url):
 
 
 def get_df_histo(name,local_path = local_histo_archive):
-    filename = local_path + name + ".csv.gz"
+    filename = local_path + name + 'bitcoinchart/' + ".csv.gz"
     df = pd.read_csv(filename,compression='gzip',header=None,names=['date','price','qty'])
     return df
