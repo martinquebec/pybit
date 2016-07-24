@@ -1,4 +1,4 @@
-import bitcoinchart.histo as histo
+import bitcoinchart.bitcoinchart as histo
 
 
 base_url = 'http://api.bitcoincharts.com/v1/csv/'

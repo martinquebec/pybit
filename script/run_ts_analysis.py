@@ -1,4 +1,4 @@
-import bitcoinchart.histo as histo
+import bitcoinchart.bitcoinchart as histo
 import pandas as pd
 import datetime as dt
 import numpy as np
@@ -47,11 +47,11 @@ df = histo.get_df_histo(market)
     #  1  1364767669   93.30  80.628518
 
     # converting the date in datetime, filtering and setting data as index
-df['date'] = pd.to_datetime(df['date'],unit='s')
-start = dt.datetime(2015,1,1)
-df = df.loc[df['date'] > start]
-df.index = df['date']
-del df['date']
+#df['date'] = pd.to_datetime(df['date'],unit='s')
+#start = dt.datetime(2015,1,1)
+#df = df.loc[df['date'] > start]
+#df.index = df['date']
+#del df['date']
 
 # minutly bucketing, adding minute, day and weekday columns
 minutely_df = df.resample('1min', how ={'price': np.mean, 'qty': np.sum})
@@ -83,10 +83,6 @@ pred_qty = daily_volume.predicted_qty.iloc[-1]
 #2015-01-01   5177.991896        3      1.050329   5438.596399
 #2015-01-02   3834.544008        4      1.039678   3986.692428
 #2015-01-03  47380.812581        5      0.851738  40356.037254
-
-
-#plt.close()
-#plt.subplots_adjust(left=left, bottom=bottom, right=right, top=top, wspace=wspace, hspace=hspace)
 
 weekday_intraday_curves = pd.DataFrame({"all" : get_intraday_curves(minutely_df)})
 
