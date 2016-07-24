@@ -4,6 +4,7 @@ import gzip
 import pandas as pd
 import re
 import getpass
+import datetime as dt
 
 local_histo_archive = '/Users/' + getpass.getuser() + '/Documents/dev/mabit/histo/'
 print 'Using ' + local_histo_archive + ' as local archive path'
@@ -35,6 +36,12 @@ def getListofFile(url):
 
 
 def get_df_histo(name,local_path = local_histo_archive):
-    filename = local_path + name + 'bitcoinchart/' + ".csv.gz"
+    filename = local_path + 'bitcoinchart/'+ name + ".csv.gz"
     df = pd.read_csv(filename,compression='gzip',header=None,names=['date','price','qty'])
+    # converting the date in datetime, filtering and setting data as index
+    df['date'] = pd.to_datetime(df['date'], unit='s')
+    start = dt.datetime(2015, 1, 1)
+    df = df.loc[df['date'] > start]
+    df.index = df['date']
+    del df['date']
     return df
